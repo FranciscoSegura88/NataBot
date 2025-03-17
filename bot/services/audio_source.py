@@ -1,5 +1,6 @@
 import discord
 import yt_dlp as youtube_dl
+import asyncio
 
 class AudioSource:
     def __init__(self):
@@ -22,14 +23,24 @@ class AudioSource:
         self.ytdl = youtube_dl.YoutubeDL(self.ytdl_format_options)
 
     async def get_audio(self, url, stream=False):
-        data = await self.ytdl.extract_info(url, download=not stream)
+        # Run ytdl extract_info in a thread pool since it's blocking
+        loop = asyncio.get_event_loop()
+        data = await loop.run_in_executor(
+            None, lambda: self.ytdl.extract_info(url, download=not stream)
+        )
+
         if 'entries' in data:
             data = data['entries'][0]
         filename = data['url'] if stream else self.ytdl.prepare_filename(data)
         return discord.FFmpegPCMAudio(filename, **self.ffmpeg_options), data
 
     async def search_audio(self, query):
-        data = await self.ytdl.extract_info(f"ytsearch:{query}", download=False)
+        # Run ytdl extract_info in a thread pool since it's blocking
+        loop = asyncio.get_event_loop()
+        data = await loop.run_in_executor(
+            None, lambda: self.ytdl.extract_info(f"ytsearch:{query}", download=False)
+        )
+
         if 'entries' in data:
             data = data['entries'][0]
         filename = data['url']

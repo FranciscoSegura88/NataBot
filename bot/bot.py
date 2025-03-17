@@ -1,4 +1,5 @@
 import discord
+import asyncio
 from discord.ext import commands
 from bot.commands.music_commands import MusicCommands
 from bot.services.audio_source import AudioSource
@@ -14,19 +15,19 @@ bot = commands.Bot(command_prefix=PREFIX, intents=intents)
 # Inicializar el servicio de audio
 audio_source = AudioSource()
 
-# Función asíncrona para configurar el bot
-async def setup_bot():
+@bot.event
+async def on_ready():
+    print(f'Bot está listo. Conectado como {bot.user}')
+    print(f'Usando prefijo: {PREFIX}')
+
+    # Registrar comandos una vez que el bot esté listo
     await bot.add_cog(MusicCommands(bot, audio_source))
+    print("Comandos de música registrados")
 
 # Función para ejecutar el bot
 def run():
+    discord.utils.setup_logging()
     bot.run(TOKEN)
 
-# Configurar el bot antes de ejecutarlo
-async def main():
-    await setup_bot()
-    await bot.start(TOKEN)  # Usar bot.start en lugar de bot.run
-
 if __name__ == '__main__':
-    import asyncio
-    asyncio.run(main())
+    run()
