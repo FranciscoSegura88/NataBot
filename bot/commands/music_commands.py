@@ -89,3 +89,10 @@ class MusicCommands(commands.Cog):
             await ctx.send(f"Volumen ajustado a {volume}%.")
         else:
             await ctx.send("El volumen debe estar entre 0 y 100.")
+
+#TODO: Implementar el comando pause
+#TODO: Implementar el comando resume
+#TODO: Implementar el comando clear
+#TODO: Implementar el comando remove
+#TODO: Implementar el comando shuffle
+#TODO: Implementar el comando playlist
