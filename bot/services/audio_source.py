@@ -38,11 +38,19 @@ class AudioSource:
     async def search_audio(self, query):
         print(f"Buscando audio para: {query}")
         loop = asyncio.get_event_loop()
-        data = await loop.run_in_executor(
-            None, lambda: self.ytdl.extract_info(f"ytsearch:{query}", download=False)
-        )
-        print(f"Datos obtenidos: {data}")
-        if 'entries' in data:
-            data = data['entries'][0]
-        filename = data['url']
-        return discord.FFmpegPCMAudio(filename, **self.ffmpeg_options), data
+        try:
+            data = await loop.run_in_executor(
+                None, lambda: self.ytdl.extract_info(f"ytsearch:{query}", download=False)
+            )
+            if 'entries' in data:
+                data = data['entries'][0]
+                print(f"Canción encontrada: {data['title']}")  # Solo imprimir el título
+            else:
+                print("No se encontraron resultados.")
+                return None, None
+
+            filename = data['url']
+            return discord.FFmpegPCMAudio(filename, **self.ffmpeg_options), data
+        except Exception as e:
+            print(f"Error al buscar audio: {e}")
+            return None, None

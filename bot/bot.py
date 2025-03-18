@@ -16,6 +16,10 @@ bot = commands.Bot(command_prefix=PREFIX, intents=intents)
 audio_source = AudioSource()
 
 @bot.event
+async def on_error(event, *args, **kwargs):
+    print(f"Error en el evento {event}: {args} {kwargs}")
+
+@bot.event
 async def on_ready():
     print(f'Bot está listo. Conectado como {bot.user}')
     print(f'Usando prefijo: {PREFIX}')

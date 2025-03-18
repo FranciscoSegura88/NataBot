@@ -11,31 +11,34 @@ class MusicCommands(commands.Cog):
 
     @commands.command(name='play', help='Reproduce una canción desde YouTube')
     async def play(self, ctx, *, query: str):
-        # Verifica si el usuario está en un canal de voz
         if not ctx.author.voice:
             await ctx.send(f"{ctx.author.name}, no estás en un canal de voz.")
             return
 
-        # Conecta el bot al canal de voz del usuario si no está conectado
-        if not ctx.voice_client:
-            channel = ctx.author.voice.channel
-            await channel.connect()
+        try:
+            if not ctx.voice_client:
+                channel = ctx.author.voice.channel
+                await channel.connect()
 
-        async with ctx.typing():
-            # Si es una URL, reproducir directamente
-            if query.startswith('http'):
-                player, data = await self.audio_source.get_audio(query, stream=True)
+            async with ctx.typing():
+                if query.startswith('http'):
+                    player, data = await self.audio_source.get_audio(query, stream=True)
+                else:
+                    player, data = await self.audio_source.search_audio(query)
+
+                if not player or not data:
+                    await ctx.send("No se pudo encontrar la canción.")
+                    return
+
                 self.queue_manager.add_to_queue({'player': player, 'data': data})
-            else:
-                # Buscar en YouTube
-                player, data = await self.audio_source.search_audio(query)
-                self.queue_manager.add_to_queue({'player': player, 'data': data})
 
-            # Si no se está reproduciendo nada, comienza a reproducir
-            if not ctx.voice_client.is_playing():
-                await self.play_next(ctx)
+                if not ctx.voice_client.is_playing():
+                    await self.play_next(ctx)
 
-        await ctx.send(f'Añadido a la cola: {data["title"]}')
+            await ctx.send(f'Añadido a la cola: {data["title"]}')
+        except Exception as e:
+            print(f"Error en el comando play: {e}")
+            await ctx.send("Ocurrió un error al intentar reproducir la canción.")
 
     async def play_next(self, ctx):
         await asyncio.sleep(1)  # Espera 1 segundo antes de reproducir la siguiente canción
@@ -65,7 +68,7 @@ class MusicCommands(commands.Cog):
     @commands.command(name='skip', help='Salta la canción actual')
     async def skip(self, ctx):
         voice_client = ctx.guild.voice_client
-        if voice_client.is_playing():
+        if voice_client and voice_client.is_playing():
             voice_client.stop()
             await ctx.send("Canción saltada.")
         else:
