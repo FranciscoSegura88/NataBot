@@ -5,7 +5,7 @@ import asyncio
 class AudioSource:
     def __init__(self):
         self.ytdl_format_options = {
-            'format': 'bestaudio/best',
+            'format': 'bestaudio/best[ext=webm]/best',
             'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
             'restrictfilenames': True,
             'noplaylist': True,
@@ -18,7 +18,7 @@ class AudioSource:
             'source_address': '0.0.0.0'  # IPv4
         }
         self.ffmpeg_options = {
-            'options': '-vn'
+            'options': '-vn -b:a 128k -bufsize 256k'
         }
         self.ytdl = youtube_dl.YoutubeDL(self.ytdl_format_options)
 

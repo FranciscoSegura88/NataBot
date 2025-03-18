@@ -9,25 +9,18 @@ class MusicCommands(commands.Cog):
         self.audio_source = audio_source
         self.queue_manager = QueueManager()
 
-    @commands.command(name='join', help='Hace que el bot se una a tu canal de voz')
-    async def join(self, ctx):
-        if not ctx.author.voice:
-            await ctx.send(f"{ctx.author.name} no estás en un canal de voz.")
-            return
-        channel = ctx.author.voice.channel
-        await channel.connect()
-
-    @commands.command(name='leave', help='Hace que el bot abandone el canal de voz')
-    async def leave(self, ctx):
-        voice_client = ctx.guild.voice_client
-        if voice_client.is_connected():
-            self.queue_manager.clear_queue()
-            await voice_client.disconnect()
-        else:
-            await ctx.send("El bot no está conectado a un canal de voz.")
-
     @commands.command(name='play', help='Reproduce una canción desde YouTube')
     async def play(self, ctx, *, query: str):
+        # Verifica si el usuario está en un canal de voz
+        if not ctx.author.voice:
+            await ctx.send(f"{ctx.author.name}, no estás en un canal de voz.")
+            return
+
+        # Conecta el bot al canal de voz del usuario si no está conectado
+        if not ctx.voice_client:
+            channel = ctx.author.voice.channel
+            await channel.connect()
+
         async with ctx.typing():
             # Si es una URL, reproducir directamente
             if query.startswith('http'):
@@ -38,6 +31,7 @@ class MusicCommands(commands.Cog):
                 player, data = await self.audio_source.search_audio(query)
                 self.queue_manager.add_to_queue({'player': player, 'data': data})
 
+            # Si no se está reproduciendo nada, comienza a reproducir
             if not ctx.voice_client.is_playing():
                 await self.play_next(ctx)
 
@@ -56,6 +50,15 @@ class MusicCommands(commands.Cog):
             print(f'Error: {error}')
         asyncio.run_coroutine_threadsafe(self.play_next(ctx), self.bot.loop)
 
+    @commands.command(name='leave', help='Hace que el bot abandone el canal de voz')
+    async def leave(self, ctx):
+        voice_client = ctx.guild.voice_client
+        if voice_client.is_connected():
+            self.queue_manager.clear_queue()
+            await voice_client.disconnect()
+        else:
+            await ctx.send("El bot no está conectado a un canal de voz.")
+
     @commands.command(name='skip', help='Salta la canción actual')
     async def skip(self, ctx):
         voice_client = ctx.guild.voice_client
@@ -73,7 +76,7 @@ class MusicCommands(commands.Cog):
         else:
             await ctx.send("La cola de reproducción está vacía.")
 
-    @commands.command(name='volume', help='Ajusta el volumen (0-100)')
+    @commands.command(name='volumen', help='Ajusta el volumen (0-100)')
     async def volume(self, ctx, volume: int):
         if 0 <= volume <= 100:
             ctx.voice_client.source.volume = volume / 100
