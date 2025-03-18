@@ -38,6 +38,7 @@ class MusicCommands(commands.Cog):
         await ctx.send(f'Añadido a la cola: {data["title"]}')
 
     async def play_next(self, ctx):
+        await asyncio.sleep(1)  # Espera 1 segundo antes de reproducir la siguiente canción
         if self.queue_manager.queue:
             next_song = self.queue_manager.get_next_song()
             ctx.voice_client.play(next_song['player'], after=lambda e: self.after_play(ctx, e))
@@ -47,7 +48,9 @@ class MusicCommands(commands.Cog):
 
     def after_play(self, ctx, error):
         if error:
-            print(f'Error: {error}')
+            print(f'Error en after_play: {error}')
+        else:
+            print(f'Canción terminada, reproduciendo la siguiente...')
         asyncio.run_coroutine_threadsafe(self.play_next(ctx), self.bot.loop)
 
     @commands.command(name='leave', help='Hace que el bot abandone el canal de voz')
@@ -76,7 +79,7 @@ class MusicCommands(commands.Cog):
         else:
             await ctx.send("La cola de reproducción está vacía.")
 
-    @commands.command(name='volumen', help='Ajusta el volumen (0-100)')
+    @commands.command(name='volume', help='Ajusta el volumen (0-100)')
     async def volume(self, ctx, volume: int):
         if 0 <= volume <= 100:
             ctx.voice_client.source.volume = volume / 100
