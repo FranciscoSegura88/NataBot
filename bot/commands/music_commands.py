@@ -95,4 +95,5 @@ class MusicCommands(commands.Cog):
 #TODO: Implementar el comando clear
 #TODO: Implementar el comando remove
 #TODO: Implementar el comando shuffle
-#TODO: Implementar el comando playlist
+#TODO: Implementar el comando playlist (añadir, eliminar, reproducir, guardar playlist en base de datos)
+
